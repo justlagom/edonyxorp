@@ -1,63 +1,31 @@
-name: Build and Push Hugging Face Projects
+name: Build Hugging Face Folder Image
 
 on:
   push:
     branches: [ "main" ]
-    # 只有当 hugging-face 文件夹下的内容变动时才触发，避免无意义构建
+    # 只有当 hugging-face 文件夹有变化时才触发
     paths:
       - 'hugging-face/**'
-  workflow_dispatch: # 允许手动触发
+      - '.github/workflows/build-hugging-face.yml'
+  workflow_dispatch: # 允许你在网页上手动点击运行
 
 env:
-  # 使用 GitHub 官方的容器镜像仓库 (GHCR)，也可以换成 docker.io
   REGISTRY: ghcr.io
-  # 镜像名称前缀，通常是 用户名/仓库名
-  IMAGE_NAME: ${{ github.repository }}
+  # 镜像名称，这里我们固定叫 huggingface-web
+  IMAGE_NAME: ${{ github.repository }}-huggingface-web
 
 jobs:
-  # 第一步：动态发现 hugging-face 下有哪些子文件夹（项目）
-  find-projects:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Find subdirectories
-        id: set-matrix
-        run: |
-          # 进入 hugging-face 目录
-          cd hugging-face
-          
-          # 找到所有包含 Dockerfile 的子目录名称
-          # 如果你的每个文件夹里不一定都有 Dockerfile，可以去掉 -name Dockerfile 的判断
-          projects=$(find . -mindepth 2 -maxdepth 2 -name Dockerfile | cut -d'/' -f2 | jq -R -s -c 'split("\n")[:-1]')
-          
-          echo "Found projects: $projects"
-          # 将结果输出给下一个 job 使用
-          echo "matrix=$projects" >> $GITHUB_OUTPUT
-
-  # 第二步：使用矩阵为每个项目构建镜像
   build-and-push:
-    needs: find-projects
     runs-on: ubuntu-latest
-    # 如果没有找到任何项目，跳过此步
-    if: ${{ needs.find-projects.outputs.matrix != '[]' && needs.find-projects.outputs.matrix != '' }}
     permissions:
       contents: read
       packages: write
-    strategy:
-      fail-fast: false
-      matrix:
-        # 读取上一步生成的项目列表
-        project: ${{ fromJson(needs.find-projects.outputs.matrix) }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 登录到镜像仓库 (这里以 GitHub Packages 为例)
+      # 登录 GitHub 镜像仓库
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
@@ -65,30 +33,27 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 设置 Docker Buildx (用于多架构构建或缓存)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 提取元数据（Tags, Labels）
-      - name: Extract metadata (tags, labels) for Docker
+      # 生成标签 (latest 和 日期)
+      - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          # 镜像名格式：ghcr.io/用户名/仓库名-子项目名
-          # 例如: ghcr.io/justlagom/edonyxorp-project1
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.project }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
             type=sha,prefix={{date 'YYYYMMDD'}}-
 
       # 构建并推送
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          # 上下文设置为对应的子文件夹路径
-          context: ./hugging-face/${{ matrix.project }}
-          # Dockerfile 也在该子文件夹内
-          file: ./hugging-face/${{ matrix.project }}/Dockerfile
+          # 关键点：设置上下文为 hugging-face 文件夹
+          context: ./hugging-face
+          # Dockerfile 就在在这个文件夹里
+          file: ./hugging-face/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
