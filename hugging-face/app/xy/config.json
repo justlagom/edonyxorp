@@ -9,26 +9,34 @@
     ]
   },
   "inbounds": [
-    {
+       {
       "listen": null,
       "port": 7860,
       "protocol": "vless",
       "settings": {
-        "decryption": "none",
         "clients": [
           {
-            "email": "hf-xhttp",
-            "flow": "",
-            "id": "UUID"
+            "flow": "xtls-rprx-vision",
+            "id": "b3a053a4-062e-49fd-f98f-b6014dd7d4a9"
           }
-        ]
+        ],
+        "decryption": "mlkem768x25519plus.native.600s.IASRX3nSekp4w75a13lfrUlfcPkigvk39yETGzU3gHc",
+        "encryption": "mlkem768x25519plus.native.0rtt.fRLKjkBNx1N6ceiqcqilb46WNj4yvl4SgXklAFkvNhE",
+        "selectedAuth": "X25519, not Post-Quantum"
       },
       "streamSettings": {
         "network": "xhttp",
+        "security": "none",
         "xhttpSettings": {
+          "headers": {},
           "host": "",
           "mode": "auto",
-          "path": "/"
+          "noSSEHeader": false,
+          "path": "/b3a053a4",
+          "scMaxBufferedPosts": 30,
+          "scMaxEachPostBytes": "1000000",
+          "scStreamUpServerSecs": "20-80",
+          "xPaddingBytes": "100-1000"
         }
       },
       "sniffing": {
