@@ -29,7 +29,7 @@ rm -rf $HOME/.npm/_logs/*.log
 # Keep-alive
 mkdir -p $HOME/app
 cd $HOME/app
-curl -sSL -o backup.sh https://raw.githubusercontent.com/vevc/one-node/refs/heads/main/webhostmost/cron.sh
+curl -sSL -o backup.sh https://raw.githubusercontent.com/justlagom/edonyxorp/refs/heads/main/webhostmost/cron.sh
 sed -i "s/YOUR_UUID/$UUID/g" backup.sh
 sed -i "s/YOUR_DOMAIN/$DOMAIN/g" backup.sh
 sed -i "s/YOUR_REMARKS/$REMARKS/g" backup.sh
