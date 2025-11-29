@@ -1,8 +1,58 @@
 #!/usr/bin/env sh
 
-XRAY_VERSION="${XRAY_VERSION:-25.9.11}"
-HY2_VERSION="${HY2_VERSION:-2.6.4}"
-ARGO_VERSION="${ARGO_VERSION:-2025.9.1}"
+# --- 自动获取最新版本号 ---
+
+# 函数：从 GitHub API 获取最新版本号并去除前缀（如 'v' 或 'app/v'）
+get_latest_version() {
+    local repo="$1"
+    local prefix="$2"
+    # 使用 curl 获取 API 响应，并使用 grep/sed 提取 tag_name 字段的值
+    version=$(curl -s "https://api.github.com/repos/$repo/releases/latest" | \
+              grep -oP '"tag_name":\s*"\K[^"]+' | \
+              sed "s/^${prefix}//")
+    echo "$version"
+}
+
+# 1. 自动获取 XRAY 最新版本 (XTLS/Xray-core)
+if [ -z "$XRAY_VERSION" ]; then
+    echo "🔍 正在自动拉取 Xray-core 最新版本..."
+    # Xray 版本号带有 'v' 前缀
+    XRAY_VERSION=$(get_latest_version "XTLS/Xray-core" "v")
+    if [ -z "$XRAY_VERSION" ]; then
+        echo "⚠️ 自动获取 XRAY_VERSION 失败，将使用默认值 25.9.11。"
+        XRAY_VERSION="25.9.11"
+    else
+        echo "✅ XRAY_VERSION: $XRAY_VERSION"
+    fi
+fi
+
+# 2. 自动获取 HYSTERIA 2 最新版本 (apernet/hysteria)
+if [ -z "$HY2_VERSION" ]; then
+    echo "🔍 正在自动拉取 Hysteria 2 最新版本..."
+    # Hysteria 2 版本号带有 'app/v' 前缀
+    HY2_VERSION=$(get_latest_version "apernet/hysteria" "app/v")
+    if [ -z "$HY2_VERSION" ]; then
+        echo "⚠️ 自动获取 HY2_VERSION 失败，将使用默认值 2.6.4。"
+        HY2_VERSION="2.6.4"
+    else
+        echo "✅ HY2_VERSION: $HY2_VERSION"
+    fi
+fi
+
+# 3. 自动获取 ARGO/cloudflared 最新版本 (cloudflare/cloudflared)
+if [ -z "$ARGO_VERSION" ]; then
+    echo "🔍 正在自动拉取 cloudflared 最新版本..."
+    # cloudflared 版本号不带前缀
+    ARGO_VERSION=$(get_latest_version "cloudflare/cloudflared" "")
+    if [ -z "$ARGO_VERSION" ]; then
+        echo "⚠️ 自动获取 ARGO_VERSION 失败，将使用默认值 2025.9.1。"
+        ARGO_VERSION="2025.9.1"
+    else
+        echo "✅ ARGO_VERSION: $ARGO_VERSION"
+    fi
+fi
+
+# --- 其余用户自定义变量保持不变 ---
 DOMAIN="${DOMAIN:-node.waifly.com}"
 PORT="${PORT:-10008}"
 UUID="${UUID:-$(cat /proc/sys/kernel/random/uuid)}"
