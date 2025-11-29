@@ -11,8 +11,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  # 镜像名称，这里我们固定叫 huggingface-web
-  IMAGE_NAME: ${{ github.repository }}-huggingface-web
+  # 镜像名称
+  IMAGE_NAME: ${{ github.repository }}-hfxary
 
 jobs:
   build-and-push:
