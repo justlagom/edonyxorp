@@ -44,9 +44,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest
-            # *** 关键修改在这里 ***
-            # 使用 '06.01.02' 格式生成 YY.MM.DD 格式的标签
-            type=raw,value={{date '06.01.02'}}
+            type=raw,value={{date 'YYYYMMDD'}}
 
       # 构建并推送
       - name: Build and push Docker image
