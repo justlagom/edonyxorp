@@ -41,7 +41,7 @@ COPY --from=builder /app/xy /usr/local/bin/xy
 COPY --from=builder /app/td /usr/local/bin/td
 COPY --from=builder /app/supercronic /usr/local/bin/supercronic
 
-EXPOSE 7860
+EXPOSE 8080
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["supervisord", "-c", "/app/supervisor/supervisord.conf"]
